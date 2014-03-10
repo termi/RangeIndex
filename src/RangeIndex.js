@@ -1,5 +1,7 @@
 "use strict";
 
+const BUILD_VERSION = '%%BUILD_VERSION%%';
+
 const assert = ((expect, msg) => { if (expect != true)throw new Error(msg || "") });
 const assign = (t, s) => {
 	for ( var p in s ) if ( s.hasOwnProperty(p) ) {
@@ -254,5 +256,7 @@ class RangeIndex {
 		return result;
 	}
 }
+
+RangeIndex.version = BUILD_VERSION;
 
 module.exports = RangeIndex;
