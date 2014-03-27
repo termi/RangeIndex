@@ -41,23 +41,10 @@ rangeIndex.findOuter(300, 500);//["150-1000", "250-1200"]
 
 ```
 
-## Install & usage
+## Install
 
-Note: **Not in npm for now**
+`npm install rangeindex`
 
-0. Clone this repo
-`git clone https://github.com/termi/RangeIndex.git`
-0. Install deps `npm install`
-0. Build es5 version
+## License
 
-    ```shell
-    cd build
-    ./build.sh
-    ```
-
-0. Use it
-
-    ```javascript
-    var RangeIndex = require('./build/es5/RangeIndex');
-    var rangeIndex = new RangeIndex();
-    ```
+MIT
