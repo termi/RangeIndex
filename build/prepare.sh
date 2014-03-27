@@ -18,3 +18,5 @@ cd build
 
 cd ../..
 tar czf range-index.tgz range-index && rm -rf range-index
+
+echo 'tgz file: build/npm/range-index.tgz'
