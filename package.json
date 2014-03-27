@@ -1,5 +1,5 @@
 {
-	"name": "range-index",
+	"name": "rangeindex",
 	"version": "0.0.1",
 	"description": "",
 	"main": "./build/es5/RangeIndex.js",
@@ -17,7 +17,8 @@
 	"keywords": [
 		"range",
 		"index",
-		"range-index"
+		"range-index",
+		"rangeindex"
 	],
 	"scripts": {
 		"test": "node --harmony run-tests"
