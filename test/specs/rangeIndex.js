@@ -41,6 +41,19 @@ for( let [testFrom, testTo] of [[0, 100], [0, 150], [50, 150], [50, 1200], [150,
 	}
 }
 
+for( let [testFrom, testTo] of [[10, 20], [10, 155], [50, 100], [70, 80]] ) {
+	testDescription_find[`find with sort ${testFrom}-${testTo}`] = (test) => {
+		const resultExpected = dataset.filter( ({from, to}) => from >= testFrom && to <= testTo ).map( ({data}) => data);
+		const countExpected = resultExpected.length;
+
+		let result = rangeIndex.find(testFrom, testTo, {sort: sortDataset});
+
+		test.equals(result.length, countExpected, `should found ${countExpected} objects, but ${result.length} found`);
+		test.deepEqual(result, resultExpected);
+		test.done();
+	}
+}
+
 for( let [testFrom, testTo] of [[10, 155], [150, 250], [150, 1100], [150, 1200], [151, 1999], [500, 501]] ) {
 	testDescription_find[`findOuter ${testFrom}-${testTo}`] = (test) => {
 		const resultExpected = dataset.filter( ({from, to}) => from <= testFrom && to >= testTo ).map( ({data}) => data);
@@ -60,6 +73,20 @@ for( let [testFrom, testTo] of [[10, 20], [10, 155], [50, 100], [70, 80]] ) {
 		const countExpected = resultExpected.length;
 
 		let result = rangeIndex.findOuter(testFrom, testTo, {sort: sortDataset});
+
+		test.equals(result.length, countExpected, `should found ${countExpected} objects, but ${result.length} found`);
+		test.deepEqual(result, resultExpected);
+		test.done();
+	}
+}
+
+
+for( let testFrom of [0, 10, 50, 70, 150, 500] ) {
+	testDescription_find[`startsFrom ${testFrom}`] = (test) => {
+		const resultExpected = dataset.filter( ({from}) => from === testFrom ).map( ({data}) => data);
+		const countExpected = resultExpected.length;
+
+		let result = rangeIndex.startsFrom(testFrom);
 
 		test.equals(result.length, countExpected, `should found ${countExpected} objects, but ${result.length} found`);
 		test.deepEqual(result, resultExpected);

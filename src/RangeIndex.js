@@ -71,22 +71,32 @@ class RangeIndex {
 		(index.__data || (index.__data = [])).push({from, to, data});
 	}
 
-	find(from, to = from, options = {}) {
+	find(from, to, options = {}) {
 //		if ( from > to ) throw new Error("'from' value must be <= 'to' value");
 		const index = this.indexFrom
 			, result = []
-			, {filter} = options
+			, {filter, sort} = options
+			, sortKeys = typeof sort === 'function' ? [] : void 0
 		;
+
+		if ( sortKeys ) {
+			delete options.sort;
+		}
 
 		let pendingFromValue
 			, pendingToValue
 		;
 
 		let fromKey = `${from}`
-			, fromKeys = [ for( v of fromKey.split("") ) v | 0 ]
+			, fromKeys = [ v | 0 for( v of fromKey.split("") ) ]
 			, fromDeep = fromKeys.length
 			, maxLimitProp = `__maxTo${fromDeep}`
 		;
+
+		let passTo = to === void 0;
+		if ( passTo ) {
+			to = from;
+		}
 
 		let localTo
 			, toKeys = `${to}`.split("")
@@ -139,10 +149,18 @@ class RangeIndex {
 					subIndexContainer = subIndexContainer.__data;
 					if ( subIndexContainer ) {
 						for( let record of subIndexContainer ) {
-							let {to: foundTo} = record;
+							let {to: foundTo, from: foundFrom, data} = record;
 
-							if ( foundTo <= to && (!filter || filter(record.data, record.from, record.to) !== false) ) {
-								result.push(record.data);
+							let matched = (passTo === true || foundTo <= to)
+								&& (!filter || filter(data, foundFrom, foundTo) !== false)
+							;
+
+							if ( matched ) {
+								result.push(data);
+
+								if ( sortKeys ) {
+									sortKeys.push({foundFrom, foundTo, data, index: result.length - 1});
+								}
 							}
 						}
 					}
@@ -163,7 +181,14 @@ class RangeIndex {
 			result.push(...this.find(pendingFromValue, pendingToValue, options));
 		}
 
-		return result;
+		if ( sortKeys ) {
+			return sortKeys.sort(sort).map( ({index}) => result[index] );
+		}
+		else {
+			return result;
+		}
+
+
 	}
 
 	findOuter(innerFrom, innerTo = innerFrom, options = {}) {
@@ -173,7 +198,7 @@ class RangeIndex {
 		;
 
 		let intValue = innerFrom | 0
-			, fromKeys = [ for( v of `${intValue}`.split("") ) v | 0 ]
+			, fromKeys = [ v | 0 for( v of `${intValue}`.split("") ) ]
 			, fromDeep = fromKeys.length
 			, maxLimitProp = `__maxTo${fromDeep}`
 			, minLimitProp = `__minFrom${fromDeep}`
@@ -186,16 +211,16 @@ class RangeIndex {
 		;
 
 		let checkRecords = (records = []) => {
-			for ( let {from, to, data} of records ) {
-				if ( from <= innerFrom && to >= innerTo && (!filter || filter(data, from, to) !== false) ) {
+			for ( let {from: _from, to, data} of records ) {
+				if ( _from <= innerFrom && to >= innerTo && (!filter || filter(data, _from, to) !== false) ) {
 					result.unshift(data);
 					
 					if ( sortKeys ) {
-						sortKeys.push({from, to, reverseIndex: sortKeys.length});
+						sortKeys.push({_from, to, data, reverseIndex: sortKeys.length});
 					}
 				}
 			}
-		}
+		};
 
 		while( intValue >= 0 ) {
 			let keyValue = fromKeys[currentDeep - 1];
@@ -255,6 +280,15 @@ class RangeIndex {
 
 		return result;
 	}
+
+	startsFrom(from, options) {
+		return this.find(from, void 0, options);
+	}
+
+// TODO::
+//	endsTo() {
+//
+//	}
 }
 
 RangeIndex.version = BUILD_VERSION;
