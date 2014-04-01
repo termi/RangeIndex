@@ -64,4 +64,4 @@ moduleFiles.concat(testFiles).forEach(function(filename) {
 	fs.writeFileSync(outputFilename, fileContent);
 });
 
-console.log("done build")
+console.log("done build");

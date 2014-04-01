@@ -1,6 +1,6 @@
 {
 	"name": "rangeindex",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "",
 	"main": "./build/es5/RangeIndex.js",
 	"repository": {
