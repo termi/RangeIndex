@@ -27,17 +27,25 @@ class RangeIndex {
 		let index = this.indexFrom
 			, indexeKeys = `${from}`.split("")
 			, {length} = indexeKeys// key deep
-			, maxLimitProp = `__maxTo${length}`
-			, minLimitProp = `__minFrom${length}`
+			, maxToProp = `__maxTo${length}`
+			, minToProp = `__minTo${length}`
+			, minFromProp = `__minFrom${length}`
+			, maxFromProp = `__maxFrom${length}`
 			, countLimitProp = `__count${length}`
 		;
 
 		function updateIndex(index) {
-			if ( !(index[maxLimitProp] >= to) ) {
-				index[maxLimitProp] = to;
+			if ( !(index[maxToProp] >= to) ) {
+				index[maxToProp] = to;
 			}
-			if ( !(index[minLimitProp] <= from) ) {
-				index[minLimitProp] = from;
+			if ( !(index[minToProp] <= to) ) {
+				index[minToProp] = to;
+			}
+			if ( !(index[maxFromProp] >= from) ) {
+				index[maxFromProp] = from;
+			}
+			if ( !(index[minFromProp] <= from) ) {
+				index[minFromProp] = from;
 			}
 			if ( !(index[`__maxTo`] >= to) ) {
 				index[`__maxTo`] = to;
@@ -76,12 +84,12 @@ class RangeIndex {
 		const index = this.indexFrom
 			, result = []
 			, {filter, sort} = options
-			, sortKeys = typeof sort === 'function' ? [] : void 0
+			, isOuterCall = !options._isInnerCall
+			, sortKeys = options._sortKeys || (typeof sort === 'function' ? [] : void 0)
 		;
 
-		if ( sortKeys ) {
-			delete options.sort;
-		}
+		options._isInnerCall = true;
+		options._sortKeys = sortKeys;
 
 		let pendingFromValue
 			, pendingToValue
@@ -90,7 +98,9 @@ class RangeIndex {
 		let fromKey = `${from}`
 			, fromKeys = [ v | 0 for( v of fromKey.split("") ) ]
 			, fromDeep = fromKeys.length
-			, maxLimitProp = `__maxTo${fromDeep}`
+			, maxToProp = `__maxTo${fromDeep}`
+			, minToProp = `__minTo${fromDeep}`
+			, minFromProp = `__minFrom${fromDeep}`
 		;
 
 		let passTo = to === void 0;
@@ -131,7 +141,7 @@ class RangeIndex {
 					fromKey = fromKeys[fromKeyIndex] | 0;
 					subIndex = subIndex[fromKey];
 					if ( subIndex ) {
-						if ( subIndex[maxLimitProp] < from ) {//check `__maxTo${deep}` and `__maxFrom${deep}`
+						if ( subIndex[maxToProp] < from || subIndex[minFromProp] > from ) {//check `__maxTo${deep}` and `__minFrom${deep}`
 							//fast check: fragments in this index has changes outside current recort
 							subIndex = void 0;
 						}
@@ -145,7 +155,7 @@ class RangeIndex {
 			if ( subIndex ) {
 				let subIndexContainer = subIndex[lastKey];
 
-				if ( subIndexContainer && subIndexContainer[maxLimitProp] >= localTo ) {
+				if ( subIndexContainer && (passTo || subIndexContainer[minToProp] <= to) ) {
 					subIndexContainer = subIndexContainer.__data;
 					if ( subIndexContainer ) {
 						for( let record of subIndexContainer ) {
@@ -159,7 +169,7 @@ class RangeIndex {
 								result.push(data);
 
 								if ( sortKeys ) {
-									sortKeys.push({foundFrom, foundTo, data, index: result.length - 1});
+									sortKeys.push({from: foundFrom, to: foundTo, data, index: sortKeys.length});
 								}
 							}
 						}
@@ -181,14 +191,16 @@ class RangeIndex {
 			result.push(...this.find(pendingFromValue, pendingToValue, options));
 		}
 
-		if ( sortKeys ) {
-			return sortKeys.sort(sort).map( ({index}) => result[index] );
-		}
-		else {
-			return result;
+		if ( isOuterCall ) {
+			delete options._isInnerCall;
+			delete options._sortKeys;
+
+			if ( sortKeys ) {
+				return sortKeys.sort(sort).map( ({index}) => result[index] );
+			}
 		}
 
-
+		return result;
 	}
 
 	findOuter(innerFrom, innerTo = innerFrom, options = {}) {
@@ -216,7 +228,7 @@ class RangeIndex {
 					result.unshift(data);
 					
 					if ( sortKeys ) {
-						sortKeys.push({_from, to, data, reverseIndex: sortKeys.length});
+						sortKeys.push({from: _from, to, data, reverseIndex: sortKeys.length});
 					}
 				}
 			}
