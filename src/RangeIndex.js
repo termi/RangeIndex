@@ -2,14 +2,6 @@
 
 const BUILD_VERSION = '%%BUILD_VERSION%%';
 
-const assert = ((expect, msg) => { if (expect != true)throw new Error(msg || "") });
-const assign = (t, s) => {
-	for ( var p in s ) if ( s.hasOwnProperty(p) ) {
-		t[p] = s[p];
-	}
-	return t;
-};
-
 class RangeIndex {
 	constructor() {
 		this.reset();
